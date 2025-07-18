@@ -252,7 +252,7 @@ print(f"Score: {score_tracker.correct}/{score_tracker.total} ({score_tracker.get
 def create_streamlit_app():
     """Tạo giao diện Streamlit"""
     
-    st.title("Chatbot Trắc Nghiệm")
+    st.title("Trắc Nghiệm")
     st.write("Hệ thống hỏi đáp trắc nghiệm Lý - Hóa - Sinh")
     
     # Initialize session state
@@ -322,7 +322,7 @@ print("Streamlit app ready. Run with: streamlit run filename.py")
 
 def run_cli_version():
     """Chạy version command line"""
-    print("VNHSGE Chatbot - Command Line Version")
+    print("VNHSGE - Command Line Version")
     
     data = load_vnhsge_data()
     vectorizer, classifier = load_model()
