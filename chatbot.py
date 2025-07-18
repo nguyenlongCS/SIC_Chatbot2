@@ -252,7 +252,7 @@ print(f"Score: {score_tracker.correct}/{score_tracker.total} ({score_tracker.get
 def create_streamlit_app():
     """Tạo giao diện Streamlit"""
     
-    st.title("Chatbot Trắc Nghiệm VNHSGE")
+    st.title("Chatbot Trắc Nghiệm")
     st.write("Hệ thống hỏi đáp trắc nghiệm Lý - Hóa - Sinh")
     
     # Initialize session state
