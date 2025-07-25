@@ -1,0 +1,89 @@
+# HỆ THỐNG TRẮC NGHIỆM VNHSGE 
+## DATASET & FEATURES
+- Dataset: VNHSGE đề thi THPT Quốc gia gồm 3 môn (Lý-Hóa-Sinh) (2019~2023)
+- Chức năng 1: Trắc nghiệm, trả về đáp án + giải thích (đã có trong bộ dữ liệu)
+- Chức năng 2: Phân loại độ khó câu hỏi (Random Forest)
+- Chức năng 3: Tìm các câu hỏi tương tự (TF-IDF + Cosine Similarity)
+- Chức năng 4: Phân loại chủ đề theo chương (PhoBERT/BERT)
+
+## TECHNICAL Q&A
+
+1. Sử dụng model AI nào?
+- Random Forest cho phân loại độ khó (DifficultyClassifier)
+- TF-IDF + Cosine Similarity cho tìm câu hỏi tương tự (SimilarQuestionFinder)
+- PhoBERT (BERT cho tiếng Việt) cho phân loại chủ đề theo chương (TopicClassifier)
+- Fallback: TF-IDF + Random Forest nếu không có GPU/transformers
+
+2. Train như thế nào?
+- Difficulty: Rule-based labeling với 15 features (từ khóa phân tích, độ dài câu, ký tự toán học) → Random Forest
+- Similarity: TF-IDF vectorization trên training set → Cosine similarity
+- Topic: Rule-based labeling theo keywords của từng chương → Fine-tuning PhoBERT (3 epochs)
+
+3. Có kết quả đánh giá (accuracy, F1-score...)?
+- DifficultyClassifier: Accuracy, F1-macro/micro/weighted, Confusion Matrix, 5-fold Cross-validation
+- SimilarQuestionFinder: Subject accuracy, within-subject vs cross-subject similarity analysis
+- TopicClassifier: Accuracy ~85-90% (PhoBERT), ~75-80% (fallback), per-topic F1-scores
+
+4. Mô hình có overfitting không? đã xử lý thế nào?
+- Train/test split 80/20 với stratified split
+- Random Forest: max_depth=8, min_samples_split=3
+- PhoBERT: Early stopping, validation set monitoring
+- 5-fold cross-validation để detect overfitting
+
+5. Mô hình có khả năng hiểu ngữ cảnh không?
+- Difficulty & Similarity: KHÔNG - chỉ dựa trên từ khóa và thống kê TF-IDF
+- Topic Classification: CÓ - PhoBERT hiểu ngữ cảnh sâu, semantic understanding
+- Pre-trained trên large Vietnamese corpus
+
+6. Tập dữ liệu huấn luyện và kiểm thử phân chia ra sao?
+- 80% train / 20% test với stratified split (đảm bảo tỷ lệ class)
+- Random seed=42 để reproducible
+- PhoBERT: Thêm validation set cho early stopping
+
+7. Tokenizer dùng loại nào?
+- Difficulty & Similarity: TF-IDF Vectorizer (whitespace split, n-gram 1-2, max features 1500-2000)
+- Topic Classification: PhoBERT tokenizer (Vietnamese-specific, max_length=256)
+- Fallback: TF-IDF với n-gram (1,3)
+
+8. Thời gian training có lâu không? Dùng GPU hay CPU?
+- Difficulty & Similarity: CPU only, vài giây đến vài phút
+- PhoBERT: GPU recommended (~10-15 phút), CPU fallback (~30-45 phút)
+- Inference: <1s per prediction (CPU), <0.1s (GPU)
+- Memory requirement: ~500MB cho PhoBERT
+
+9. Có xử lý tiếng Việt không?
+- Normalize Vietnamese accents (à → a)
+- Keep Vietnamese characters trong regex
+- Vietnamese stopwords list (60+ từ)
+- PhoBERT: Được pre-trained riêng cho tiếng Việt
+
+10. Có xử lý stopword, stemming, lemmatization không?
+- Stopwords: Có list 60+ từ tiếng Việt
+- Stemming: Không sử dụng (stem=False)
+- Lemmatization: Không có
+- PhoBERT: Built-in subword tokenization
+
+11. Có xử lý imbalance dataset không?
+- Hiện tại: Không sử dụng trong production
+- Có code balancing nhưng bị comment out
+- Stratified split để maintain class distribution
+
+12. Dữ liệu có làm sạch không? làm sạch như thế nào?
+- Remove special characters (giữ Vietnamese)
+- LaTeX formula conversion (→, ×, ÷, α, β, π...)
+- Normalize whitespace
+- Convert \n to actual line breaks
+
+13. NLP đã làm những gì trong project?
+- Text preprocessing: Clean, normalize Vietnamese text
+- Feature extraction: TF-IDF vectorization, BERT embeddings
+- Similarity computation: Cosine similarity
+- Topic classification: Deep semantic understanding với PhoBERT
+- Difficulty classification: Rule-based features + ML
+
+14. Sử dụng những thuật toán nào?
+- Random Forest (difficulty classification)
+- TF-IDF (text vectorization)
+- Cosine Similarity (similarity matching)
+- PhoBERT/BERT (topic classification)
+- Rule-based scoring (labeling)
