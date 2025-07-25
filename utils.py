@@ -118,8 +118,8 @@ def parse_question(question_full):
     
     return question.strip(), options
 
-def get_random_question(data, subject=None, year=None, difficulty=None):
-    """Lấy câu hỏi ngẫu nhiên theo filters"""
+def get_random_question(data, subject=None, year=None, difficulty=None, topic=None):
+    """Lấy câu hỏi ngẫu nhiên theo filters (bao gồm topic mới)"""
     filtered_data = data.copy()
     
     # Apply filters
@@ -131,6 +131,10 @@ def get_random_question(data, subject=None, year=None, difficulty=None):
     
     if difficulty and 'difficulty' in filtered_data.columns:
         filtered_data = filtered_data[filtered_data['difficulty'] == difficulty]
+    
+    # NEW: Topic filter
+    if topic and 'topic' in filtered_data.columns:
+        filtered_data = filtered_data[filtered_data['topic'] == topic]
     
     if len(filtered_data) == 0:
         return None

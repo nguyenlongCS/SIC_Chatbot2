@@ -3,38 +3,50 @@ main.py - Streamlit App Main File
 
 LOGIC CHÍNH:
 1. Cache dữ liệu và models để tối ưu performance
-2. Giao diện filter: môn học, năm, độ khó
+2. Giao diện filter: môn học, năm, độ khó, CHƯƠNG (topic)
 3. Hiển thị câu hỏi ngẫu nhiên và xử lý đáp án
 4. Hiển thị câu hỏi tương tự sau khi trả lời
 5. Theo dõi điểm số người dùng
 
 FLOW:
-- Load data → Initialize models → Create filters → Display question → Check answer → Show similar
+- Load data → Initialize models → Initialize topic classifier → Create filters → Display question → Check answer → Show similar
+
+NEW FEATURE: Topic Classification
+- Phân loại chủ đề câu hỏi theo chương sử dụng BERT/PhoBERT
+- Filter theo chương: VD Physics → "Dao động cơ", "Điện xoay chiều"
 """
 
 import streamlit as st
 from utils import load_vnhsge_data, get_random_question, check_answer, ScoreTracker
 from models import initialize_models
+from topic_classifier import initialize_topic_classifier
 import warnings
 warnings.filterwarnings('ignore')
 
 def create_streamlit_app():
     """Tạo giao diện Streamlit"""
     
-    st.title("Trắc Nghiệm")
-    st.write("Hệ thống hỏi đáp trắc nghiệm Lý - Hóa - Sinh")
+    st.title("Hệ thống hỏi đáp trắc nghiệm")
+    st.write("VNHSGE đề thi THPT Quốc gia gồm 3 môn (Lý-Hóa-Sinh) (2019~2023)")
     
     # Initialize session state - chỉ load một lần
     if 'data' not in st.session_state:
         raw_data = load_vnhsge_data()
+        
+        # Initialize difficulty classifier và similar finder
         difficulty_classifier, difficulties, similar_finder = initialize_models(raw_data)
         
-        # Thêm difficulty column vào data
-        data_with_difficulty = raw_data.copy()
-        data_with_difficulty['difficulty'] = difficulties
+        # Initialize topic classifier
+        topic_classifier, topics = initialize_topic_classifier(raw_data)
         
-        st.session_state.data = data_with_difficulty
+        # Thêm difficulty và topic columns vào data
+        data_enhanced = raw_data.copy()
+        data_enhanced['difficulty'] = difficulties
+        data_enhanced['topic'] = topics
+        
+        st.session_state.data = data_enhanced
         st.session_state.similar_finder = similar_finder
+        st.session_state.topic_classifier = topic_classifier
         st.session_state.score_tracker = ScoreTracker()
         st.session_state.current_question = None
         st.session_state.show_similar = False
@@ -66,10 +78,16 @@ def create_streamlit_app():
     year_code = year_options[selected_year]
     difficulty_code = difficulty_options[selected_difficulty]
     
+    # Topic filter (NEW)
+    available_topics = st.session_state.topic_classifier.get_topics_by_subject(subject_code)
+    topic_options = ['Tất cả chương'] + available_topics
+    selected_topic = st.selectbox("Chọn chương:", topic_options)
+    topic_code = None if selected_topic == 'Tất cả chương' else selected_topic
+    
     # New question button
     if st.button("Câu hỏi mới"):
         st.session_state.current_question = get_random_question(
-            st.session_state.data, subject_code, year_code, difficulty_code
+            st.session_state.data, subject_code, year_code, difficulty_code, topic_code
         )
         st.session_state.show_similar = False
     
