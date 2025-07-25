@@ -26,7 +26,7 @@ warnings.filterwarnings('ignore')
 def create_streamlit_app():
     """Tạo giao diện Streamlit"""
     
-    st.title("Hệ thống hỏi đáp trắc nghiệm")
+    st.title("Hệ thống trắc nghiệm")
     st.write("VNHSGE đề thi THPT Quốc gia gồm 3 môn (Lý-Hóa-Sinh) (2019~2023)")
     
     # Initialize session state - chỉ load một lần
